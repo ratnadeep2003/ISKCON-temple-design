@@ -61,6 +61,20 @@ const EVENTS = [
 
 // ---------- STYLES (based on your styles, extended) ----------
 const styles = {
+  monthArrowBtn: {
+  background: "none",
+  border: "0.5px solid rgba(201,146,42,0.2)",
+  color: "#E8B84B",
+  borderRadius: "8px",
+  width: "28px",
+  height: "28px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  fontSize: "18px",
+  lineHeight: 1,
+},
   page: {
     minHeight: "100vh",
     background: "#1c0c10",
@@ -213,12 +227,16 @@ export default function CalendarPage() {
   function prevMonth() {
     setCurrentMonth(subMonths(currentMonth, 1));
   }
-  function goToday() {
+    function goToday() {
     const now = new Date();
-    setCurrentMonth(now);
-    setSelectedDate(now);
+    if (now.getFullYear() === 2026) {
+      setCurrentMonth(now);
+      setSelectedDate(now);
+    } else {
+      setCurrentMonth(new Date("2026-01-01"));
+      setSelectedDate(new Date("2026-01-14"));
+    }
   }
-
   const selectedIso = format(selectedDate, "yyyy-MM-dd");
   const dayEvents = eventsByDate[selectedIso] || [];
 
@@ -241,9 +259,18 @@ export default function CalendarPage() {
         <div style={styles.container}>
           <div style={styles.leftPanel}>
             <div style={styles.calendarHeader}>
-              <div style={{ fontSize: 16, color: "#E8B84B", fontFamily: "'Cinzel', serif" }}>{format(currentMonth, "MMMM yyyy")}</div>
-              <div style={{ color: "rgba(245,233,208,0.5)", fontSize: 13 }}>{format(selectedDate, "eeee, do MMMM")}</div>
-            </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <button style={styles.monthArrowBtn} onClick={prevMonth}>‹</button>
+                <div style={{ fontSize: 16, color: "#E8B84B", fontFamily: "'Cinzel', serif" }}>
+                  {format(currentMonth, "MMMM yyyy")}
+                </div>
+                <button style={styles.monthArrowBtn} onClick={nextMonth}>›</button>
+          </div>
+
+          <div style={{ color: "rgba(245,233,208,0.5)", fontSize: 13 }}>
+            {format(selectedDate, "eeee, do MMMM")}
+          </div>
+        </div>
 
             <div style={{ ...styles.grid, marginBottom: 8 }}>
               {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
@@ -332,3 +359,4 @@ export default function CalendarPage() {
     </>
   );
 }
+
