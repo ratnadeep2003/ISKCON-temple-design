@@ -1,12 +1,12 @@
 import { useState } from "react";
 
 const USERS = [
-  { id: 1, name: "Arjun Sharma", email: "arjun@email.com", phone: "9876543210", role: "Devotee" },
-  { id: 2, name: "Priya Kulkarni", email: "priya@email.com", phone: "723456789", role: "Volunteer" },
-  {id: 3, name: "Ratnadeep Abitkar", email: "ratnadeepabitkar@gmail.com", phone: "7898654585", role: "Admin"}
+  { id: 1, name: "Ratnadeep Abitkar", email: "ratnadeep@gmail.com", phone: "9876543210" },
+  { id: 2, name: "Aryan Deshmukh", email: "aryan@email.com", phone: "723456789" },
+  {id: 3, name:"rytu", email:"er", phone:"7489"}
 ];
 
-export default function ISKCONUsers() {
+export default function Users() {
   const [search, setSearch] = useState("");
 
   const filtered = USERS.filter(
@@ -14,12 +14,6 @@ export default function ISKCONUsers() {
       u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase())
   );
-
-  const roleColor = {
-    Admin: {  color: "#E8B84B" },
-    Volunteer: {  color: "#7ecb7e" },
-    Devotee: { color: "#c4a0e8" },
-  };
 
   return (
     <>
@@ -33,22 +27,25 @@ export default function ISKCONUsers() {
             <h1 style={styles.title}>ISKCON Kolhapur</h1>
             <p style={styles.subtitle}>USER MANAGEMENT</p>
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: "flex", gap: "10px" }}>
             <button style={styles.addBtn}>Add User</button>
-            <button style={styles.addBtn}>Delete User</button>
+            <button style={styles.deleteHeaderBtn}>Delete User</button>
           </div>
         </div>
 
-        {/* Search */}
-        <input type="text" placeholder="Search by name or email..." value={search} 
-        onChange={(e) => setSearch(e.target.value)} style={styles.search} />
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={styles.search}
+        />
 
-        {/* Table */}
         <div style={styles.tableWrap}>
           <table style={styles.table}>
             <thead>
               <tr>
-                {["Name", "Email", "Phone", "Role", "Actions"].map((h) => (
+                {["Name", "Email", "Phone", "Actions"].map((h) => (
                   <th key={h} style={styles.th}>{h}</th>
                 ))}
               </tr>
@@ -57,16 +54,11 @@ export default function ISKCONUsers() {
               {filtered.map((user) => (
                 <tr key={user.id} style={styles.tr}>
                   <td style={styles.td}>
-                    <div style={styles.avatar}>
-                      {user.name.charAt(0)}
-                    </div>
+                    <div style={styles.avatar}>{user.name.charAt(0)}</div>
                     <span style={styles.name}>{user.name}</span>
                   </td>
                   <td style={{ ...styles.td, color: "rgba(245,233,208,0.6)", fontSize: "13px" }}>{user.email}</td>
                   <td style={{ ...styles.td, color: "rgba(245,233,208,0.6)", fontSize: "13px" }}>{user.phone}</td>
-                  <td style={styles.td}>
-                    <span style={{ ...styles.badge, ...roleColor[user.role] }}>{user.role}</span>
-                  </td>
                   <td style={styles.td}>
                     <button style={styles.editBtn}>Edit</button>
                     <button style={styles.deleteBtn}>Delete</button>
@@ -75,7 +67,7 @@ export default function ISKCONUsers() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ ...styles.td, textAlign: "center", color: "rgba(245,233,208,0.3)", padding: "2rem" }}>
+                  <td colSpan={4} style={{ ...styles.td, textAlign: "center", color: "rgba(245,233,208,0.3)", padding: "2rem" }}>
                     No users found.
                   </td>
                 </tr>
@@ -128,6 +120,15 @@ const styles = {
     cursor: "pointer",
     letterSpacing: "1px",
   },
+  deleteHeaderBtn: {
+    background: "none",
+    border: "0.5px solid rgba(200,60,60,0.4)",
+    borderRadius: "8px",
+    padding: "9px 16px",
+    fontSize: "12px",
+    color: "rgba(220,80,80,0.75)",
+    cursor: "pointer",
+  },
   search: {
     width: "100%",
     background: "rgba(255,255,255,0.04)",
@@ -168,7 +169,6 @@ const styles = {
     fontSize: "14px",
     color: "#f5e9d0",
     verticalAlign: "middle",
-    display: "table-cell",
   },
   avatar: {
     display: "inline-flex",
@@ -186,13 +186,6 @@ const styles = {
   },
   name: {
     verticalAlign: "middle",
-  },
-  badge: {
-    fontSize: "11px",
-    padding: "3px 10px",
-    borderRadius: "20px",
-    fontWeight: 500,
-    letterSpacing: "0.5px",
   },
   editBtn: {
     background: "none",

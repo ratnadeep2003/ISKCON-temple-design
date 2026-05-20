@@ -1,14 +1,14 @@
 import { useState } from "react";
 
-export default function ISKCONLogin() {
+export default function Login() {
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
-
-  const setters = { email: setEmail, password: setPassword };
-  const values = { email, password };
+  const setters = { email: setEmail, phone: setPhone, password: setPassword };
+  const values = { email, phone, password };
 
   return (
-    <>
+    <div>
       <link
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Inter:wght@300;400&display=swap"
         rel="stylesheet"
@@ -46,7 +46,7 @@ export default function ISKCONLogin() {
           </p>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
