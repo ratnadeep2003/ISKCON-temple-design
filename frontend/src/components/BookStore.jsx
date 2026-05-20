@@ -7,7 +7,7 @@ const PRODUCTS = [
     category: "Books",
     price: 299,
     rating: 4.9,
-    image: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80",
+    image: "https://krishnastore.com/images/cache/BGC-450x676.webp",
     description: "Classic spiritual wisdom with verse-by-verse explanations.",
   },
   {
@@ -16,7 +16,7 @@ const PRODUCTS = [
     category: "Books",
     price: 799,
     rating: 5.0,
-    image: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=800&q=80",
+    image: "https://www.touchstonemedia.com/cdn/shop/products/original-srimad-bhagavatam-set-pre-1978-10-volumes-philosophy-238_1024x.jpg?v=1647437429",
     description: "Deep devotional literature for daily reading and study.",
   },
   {
@@ -25,7 +25,7 @@ const PRODUCTS = [
     category: "Japa Beads",
     price: 149,
     rating: 4.8,
-    image: "https://images.unsplash.com/photo-1584284858801-9d52c877f7bc?auto=format&fit=crop&w=800&q=80",
+    image: "https://tulsimalastore.in/cdn/shop/files/2AD50169-56A6-4598-9B4E-0D1EEF41128A.jpg?v=1744465663&width=1946",
     description: "Sacred beads for chanting and meditation.",
   },
   {
@@ -34,16 +34,16 @@ const PRODUCTS = [
     category: "Herbal Products",
     price: 99,
     rating: 4.7,
-    image: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=800&q=80",
+    image: "https://rkmswanirvar.org/wp-content/uploads/2023/03/Pallimangal-Mockup.jpg",
     description: "Pure devotional fragrance for daily puja.",
   },
   {
     id: 5,
-    name: "Deity Dress Set",
+    name: "Deity Krishna Dress Set",
     category: "Devotional Items",
     price: 499,
     rating: 4.9,
-    image: "https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=800&q=80",
+    image: "https://images.jdmagicbox.com/quickquotes/images_main/velvet-god-radha-krishna-statue-dress-2229191169-bsingktc.jpg",
     description: "Beautiful attire for temple worship and festivals.",
   },
   {
@@ -52,7 +52,7 @@ const PRODUCTS = [
     category: "Herbal Products",
     price: 179,
     rating: 4.6,
-    image: "https://images.unsplash.com/photo-1515823662972-da6a2e7a9d3d?auto=format&fit=crop&w=800&q=80",
+    image: "https://unikta.com/wp-content/uploads/2025/08/Unikta-Organic-Saffron-Tea-and-Herbal-Infussions-M.webp",
     description: "A peaceful blend for a sattvic lifestyle.",
   },
 ];
