@@ -1,11 +1,28 @@
 import { useState } from "react";
 
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const setters = { email: setEmail, phone: setPhone, password: setPassword };
   const values = { email, phone, password };
+
+  const handleLogin = async () => {
+  try {
+    const res = await axios.post(
+      "http://localhost:5000/api/auth/login",
+      {
+        email,
+        password,
+      }
+    );
+
+    alert(res.data.message);
+  } catch (err) {
+    alert(err.response?.data?.message || "Login failed");
+  }
+};
 
   return (
     <div>
@@ -36,7 +53,7 @@ export default function Login() {
             <button style={styles.forgotBtn}>Forgot password?</button>
           </div>
 
-          <button style={styles.signInBtn} onClick={() => alert("Hare Krishna!")}>
+          <button style={styles.signInBtn} onClick={handleLogin}>
             Sign In
           </button>
 
