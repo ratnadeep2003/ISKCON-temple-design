@@ -5,9 +5,13 @@ export default function Users() {
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
 
+  const isAdmin = localStorage.getItem("userRole") === "admin";
+
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (isAdmin) {
+      fetchUsers();
+    }
+  }, [isAdmin]);
 
   const fetchUsers = async () => {
     try {
@@ -18,20 +22,18 @@ export default function Users() {
     }
   };
 
-  // NEW FUNCTION: Handles deleting users dynamically
   const handleDeleteUser = async (userId, name) => {
     if (window.confirm(`Are you sure you want to remove ${name}?`)) {
       try {
         const res = await axios.delete(`http://localhost:5000/api/auth/users/${userId}`);
         alert(res.data.message);
-        fetchUsers(); // Refresh the list dynamically after removal
+        fetchUsers();
       } catch (err) {
         alert(err.response?.data?.message || "Could not delete user");
       }
     }
   };
 
-  // NEW FUNCTION: Direct manual addition shortcut
   const handleAddUserPrompt = async () => {
     const name = prompt("Enter Name:");
     const email = prompt("Enter Email:");
@@ -49,6 +51,18 @@ export default function Users() {
     }
   };
 
+  if (!isAdmin) {
+    return (
+      <div style={{ background: "#15060a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#f5e9d0", fontFamily: "'Inter', sans-serif" }}>
+        <div style={{ textAlign: "center", padding: 20, background: "#260e14", borderRadius: 12, border: "1px solid rgba(220,80,80,0.3)" }}>
+          <h2 style={{ color: "rgba(220,80,80,0.9)", fontFamily: "'Cinzel', serif" }}>Access Denied</h2>
+          <p style={{ fontSize: 14, color: "rgba(245,233,208,0.6)" }}>This control panel is restricted to temple administrators.</p>
+          <button onClick={() => window.location.href = '/darshan'} style={{ background: "linear-gradient(135deg, #c9922a, #a47219)", border: "none", borderRadius: 6, padding: "8px 16px", cursor: "pointer", fontWeight: "600", marginTop: 10 }}>Go to Darshan</button>
+        </div>
+      </div>
+    );
+  }
+
   const filtered = users.filter(
     (u) =>
       u.name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -57,29 +71,20 @@ export default function Users() {
 
   return (
     <>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Inter:wght@300;400;500&display=swap"
-        rel="stylesheet"
-      />
+      <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
       <div style={styles.page}>
         <div style={styles.header}>
           <div>
             <h1 style={styles.title}>ISKCON Kolhapur</h1>
-            <p style={styles.subtitle}>USER MANAGEMENT</p>
+            <p style={styles.subtitle}>USER MANAGEMENT (ADMIN PANEL)</p>
           </div>
           <div style={{ display: "flex", gap: "10px" }}>
             <button style={styles.addBtn} onClick={handleAddUserPrompt}>Add User</button>
           </div>
         </div>
 
-        <input
-          type="text"
-          placeholder="Search by name or email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={styles.search}
-        />
-
+        <input type="text" placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} style={styles.search} />
+        
         <div style={styles.tableWrap}>
           <table style={styles.table}>
             <thead>
@@ -91,55 +96,36 @@ export default function Users() {
             </thead>
             <tbody>
               {filtered.map((user) => (
-                <tr key={user._id} style={styles.tr}>
+                <tr key={user._id || user.id} style={styles.tr}>
                   <td style={styles.td}>
-                    <div style={styles.avatar}>{user.name ? user.name.charAt(0).toUpperCase() : "?"}</div>
                     <span style={styles.name}>{user.name}</span>
                   </td>
                   <td style={{ ...styles.td, color: "rgba(245,233,208,0.6)", fontSize: "13px" }}>{user.email}</td>
                   <td style={{ ...styles.td, color: "rgba(245,233,208,0.6)", fontSize: "13px" }}>{user.phone}</td>
                   <td style={styles.td}>
-                    <button 
-                      style={styles.deleteBtn} 
-                      onClick={() => handleDeleteUser(user._id, user.name)}
-                    >
-                      Delete
-                    </button>
+                    <button onClick={() => handleDeleteUser(user._id || user.id, user.name)} style={{ background: "none", border: "none", color: "rgba(220,80,80,0.85)", cursor: "pointer", fontSize: "13px", fontWeight: "500" }}>Remove</button>
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={4} style={{ ...styles.td, textAlign: "center", color: "rgba(245,233,208,0.3)", padding: "2rem" }}>
-                    No users found.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
-
-        <p style={styles.count}>{filtered.length} user{filtered.length !== 1 ? "s" : ""} found</p>
       </div>
     </>
   );
 }
 
-// Keep your exact user styling objects below unchanged...
 const styles = {
-  page: { minHeight: "100vh", background: "#1c0c10", fontFamily: "'Inter', sans-serif", padding: "2rem 1.5rem", color: "#f5e9d0" },
-  header: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" },
-  title: { fontFamily: "'Cinzel', serif", fontSize: "20px", color: "#E8B84B", margin: "0 0 2px", letterSpacing: "1px" },
-  subtitle: { fontSize: "10px", color: "rgba(201,146,42,0.5)", letterSpacing: "3px", margin: 0 },
-  addBtn: { background: "linear-gradient(135deg, #7B2D10, #C9922A)", border: "none", borderRadius: "8px", padding: "9px 16px", fontFamily: "'Cinzel', serif", fontSize: "12px", color: "#FDF6E3", cursor: "pointer", letterSpacing: "1px" },
-  search: { width: "100%", background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(201,146,42,0.25)", borderRadius: "8px", padding: "10px 14px", fontSize: "14px", color: "#f5e9d0", fontFamily: "'Inter', sans-serif", outline: "none", boxSizing: "border-box", marginBottom: "1.25rem" },
+  page: { background: "#15060a", minHeight: "100vh", padding: "2rem 2.5rem", color: "#f5e9d0", fontFamily: "'Inter', sans-serif" },
+  header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" },
+  title: { fontFamily: "'Cinzel', serif", fontSize: "22px", color: "#E8B84B", margin: 0, letterSpacing: "1px" },
+  subtitle: { fontSize: "11px", color: "rgba(201,146,42,0.5)", letterSpacing: "2px", margin: "4px 0 0" },
+  addBtn: { background: "linear-gradient(135deg, #c9922a 0%, #a47219 100%)", border: "none", borderRadius: "6px", padding: "8px 16px", fontSize: "13px", fontWeight: "600", color: "#1a0b0f", cursor: "pointer", letterSpacing: "0.5px" },
+  search: { width: "100%", background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(201,146,42,0.25)", borderRadius: "8px", padding: "10px 14px", fontSize: "14px", color: "#f5e9d0", outline: "none", boxSizing: "border-box", marginBottom: "1.25rem" },
   tableWrap: { background: "#2a1018", border: "1px solid rgba(201,146,42,0.2)", borderRadius: "12px", overflow: "hidden" },
   table: { width: "100%", borderCollapse: "collapse" },
   th: { padding: "12px 16px", textAlign: "left", fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", color: "rgba(201,146,42,0.6)", borderBottom: "0.5px solid rgba(201,146,42,0.15)" },
   tr: { borderBottom: "0.5px solid rgba(201,146,42,0.08)" },
-  td: { padding: "12px 16px", fontSize: "14px", color: "#f5e9d0", verticalAlign: "middle" },
-  avatar: { display: "inline-flex", alignItems: "center", justifyContent: "center", width: "30px", height: "30px", borderRadius: "50%", background: "rgba(201,146,42,0.15)", color: "#E8B84B", fontSize: "13px", fontWeight: 500, marginRight: "10px", verticalAlign: "middle" },
-  name: { verticalAlign: "middle" },
-  deleteBtn: { background: "none", border: "0.5px solid rgba(200,60,60,0.3)", borderRadius: "6px", padding: "4px 12px", fontSize: "12px", color: "rgba(220,80,80,0.7)", cursor: "pointer" },
-  count: { fontSize: "12px", color: "rgba(245,233,208,0.25)", marginTop: "1rem", textAlign: "right" }
+  td: { padding: "12px 16px", fontSize: "14px", color: "#f5e9d0" },
+  name: { fontWeight: "500" }
 };

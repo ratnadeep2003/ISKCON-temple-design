@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   format,
   startOfMonth,
@@ -12,15 +12,7 @@ import {
   isSameDay,
 } from "date-fns";
 
-// ---------- USERS (from your original code) ----------
-const USERS = [
-  { id: 1, name: "Ratnadeep Abitkar", email: "ratnadeep@gmail.com", phone: "9876543210" },
-  { id: 2, name: "Aryan Deshmukh", email: "aryan@email.com", phone: "723456789" },
-  { id: 3, name:"rytu", email:"er", phone:"7489"}
-];
-
-// ---------- EVENTS (use your provided 2026 ISKCON EVENTS array) ----------
-const EVENTS = [
+const INITIAL_EVENTS = [
   { date: "2026-01-14", name: "Saphala Ekadashi", type: "ekadasi", parana: "06:39 – 10:28 AM", desc: "Krishna paksha – grants success and liberation" },
   { date: "2026-01-29", name: "Putrada Ekadashi", type: "ekadasi", parana: "06:40 – 10:30 AM", desc: "Shukla paksha – grants boons and sons" },
   { date: "2026-01-31", name: "Nityananda Trayodashi", type: "festival", desc: "Appearance of Lord Nityananda Prabhu" },
@@ -59,304 +51,215 @@ const EVENTS = [
   { date: "2026-12-31", name: "Saphala Ekadashi", type: "ekadasi", parana: "06:52 – 10:59 AM", desc: "Krishna paksha – auspicious end of the year fast" },
 ];
 
-// ---------- STYLES (based on your styles, extended) ----------
-const styles = {
-  monthArrowBtn: {
-  background: "none",
-  border: "0.5px solid rgba(201,146,42,0.2)",
-  color: "#E8B84B",
-  borderRadius: "8px",
-  width: "28px",
-  height: "28px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  cursor: "pointer",
-  fontSize: "18px",
-  lineHeight: 1,
-},
-  page: {
-    minHeight: "100vh",
-    background: "#1c0c10",
-    fontFamily: "'Inter', sans-serif",
-    padding: "1.5rem",
-    color: "#f5e9d0",
-    boxSizing: "border-box"
-  },
-  header: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: "1rem"
-  },
-  title: {
-    fontFamily: "'Cinzel', serif",
-    fontSize: "22px",
-    color: "#E8B84B",
-    margin: 0,
-  },
-  container: {
-    display: "grid",
-    gridTemplateColumns: "1fr 420px",
-    gap: "1rem",
-    alignItems: "start"
-  },
-  leftPanel: {
-    background: "#2a1018",
-    border: "1px solid rgba(201,146,42,0.15)",
-    borderRadius: "12px",
-    padding: "1rem"
-  },
-  rightPanel: {
-    background: "#2a1018",
-    border: "1px solid rgba(201,146,42,0.15)",
-    borderRadius: "12px",
-    padding: "1rem",
-    minHeight: "420px"
-  },
-  calendarHeader: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: "12px"
-  },
-  navBtn: {
-    background: "none",
-    border: "0.5px solid rgba(201,146,42,0.2)",
-    padding: "6px 10px",
-    color: "#E8B84B",
-    borderRadius: "8px",
-    cursor: "pointer"
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(7, 1fr)",
-    gap: "6px"
-  },
-  dayCell: {
-    minHeight: "84px",
-    padding: "8px",
-    borderRadius: "8px",
-    background: "rgba(255,255,255,0.02)",
-    color: "#f5e9d0",
-    cursor: "pointer",
-    position: "relative",
-    boxSizing: "border-box"
-  },
-  muted: { color: "rgba(245,233,208,0.25)" },
-  badge: {
-    position: "absolute",
-    right: "8px",
-    top: "8px",
-    background: "#C9922A",
-    color: "#1c0c10",
-    fontSize: "11px",
-    padding: "2px 6px",
-    borderRadius: "12px",
-    fontFamily: "'Cinzel', serif"
-  },
-  eventDot: {
-    width: "8px",
-    height: "8px",
-    borderRadius: "50%",
-    display: "inline-block",
-    marginRight: "6px"
-  },
-  search: {
-    width: "100%",
-    background: "rgba(255,255,255,0.04)",
-    border: "0.5px solid rgba(201,146,42,0.25)",
-    borderRadius: "8px",
-    padding: "8px 10px",
-    fontSize: "14px",
-    color: "#f5e9d0",
-    marginBottom: "10px"
-  },
-  usersWrap: {
-    marginTop: "12px",
-    background: "rgba(0,0,0,0.05)",
-    padding: "8px",
-    borderRadius: "8px"
-  },
-  userRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    padding: "8px",
-    borderBottom: "1px dashed rgba(255,255,255,0.03)"
-  }
-};
+export default function Calendar() {
+  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1));
+  const [selectedDate, setSelectedDate] = useState(new Date(2026, 0, 1));
+  const [events, setEvents] = useState(INITIAL_EVENTS);
 
-// ---------- Helper: group events by ISO date ----------
-const eventsByDate = EVENTS.reduce((acc, ev) => {
-  acc[ev.date] = acc[ev.date] || [];
-  acc[ev.date].push(ev);
-  return acc;
-}, {});
-
-// ---------- Component ----------
-export default function CalendarPage() {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  // Real backend variables replacing the hardcoded data array
+  const [backendUsers, setBackendUsers] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [userSearch, setUserSearch] = useState("");
-  const [search, setSearch] = useState("");
+  const [showAllUsers, setShowAllUsers] = useState(false);
 
-  const filteredUsers = USERS.filter(
-    (u) =>
-      u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-      u.email.toLowerCase().includes(userSearch.toLowerCase())
-  );
+  const isAdmin = localStorage.getItem("userRole") === "admin";
 
+  // Fetch logged-in users from backend route if the role matches "admin"
+  useEffect(() => {
+    if (!isAdmin) return;
+
+    const fetchLoggedInUsers = async () => {
+      setIsLoadingUsers(true);
+      try {
+        // Replace this URL string with your actual backend route (e.g., "/api/admin/active-users")
+        const response = await fetch("http://localhost:5000/api/auth/users", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            // Include auth header if your endpoint is protected
+            "Authorization": `Bearer ${localStorage.getItem("authToken")}`
+          }
+        });
+
+        if (!response.ok) throw new Error("Failed to capture user logs");
+        const data = await response.json();
+
+        // Expecting an array layout matching: [{ id, name, email, phone }]
+        setBackendUsers(data);
+      } catch (err) {
+        console.error("Database Connection Error: ", err);
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    };
+
+    fetchLoggedInUsers();
+  }, [isAdmin]);
+
+  const handleAddEvent = () => {
+    const name = prompt("Enter Event Name:");
+    if (!name) return;
+    const date = prompt("Enter Date (YYYY-MM-DD):", format(selectedDate, "yyyy-MM-dd"));
+    if (!date) return;
+    const type = prompt("Enter Type (ekadasi or festival):", "festival");
+    const desc = prompt("Enter Description:");
+    const parana = type === "ekadasi" ? prompt("Enter Parana Time (Optional):") : "";
+
+    const newEvent = { date, name, type, desc, parana };
+    setEvents(prev => [...prev, newEvent]);
+    alert("Event added locally!");
+  };
+
+  // Filter backend users based on active query
+  const filteredUsers = useMemo(() => {
+    return backendUsers.filter(u =>
+      (u.name?.toLowerCase() || "").includes(userSearch.toLowerCase()) ||
+      (u.email?.toLowerCase() || "").includes(userSearch.toLowerCase())
+    );
+  }, [userSearch, backendUsers]);
+
+  // Dynamic pagination slice 
+  const displayedUsers = useMemo(() => {
+    if (showAllUsers) return filteredUsers;
+    return filteredUsers.slice(0, 5);
+  }, [filteredUsers, showAllUsers]);
+
+  const activeEvents = useMemo(() => {
+    return events.filter(e => isSameDay(new Date(e.date), selectedDate));
+  }, [selectedDate, events]);
+
+  // Calendar rendering builders
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(monthStart);
-  const startDate = startOfWeek(monthStart, { weekStartsOn: 0 });
-  const endDate = endOfWeek(monthEnd, { weekStartsOn: 0 });
+  const startDate = startOfWeek(monthStart);
+  const endDate = endOfWeek(monthEnd);
 
-  const monthDays = useMemo(() => {
-    const days = [];
-    let day = startDate;
-    while (day <= endDate) {
-      days.push(day);
+  const rows = [];
+  let days = [];
+  let day = startDate;
+
+  while (day <= endDate) {
+    for (let i = 0; i < 7; i++) {
+      const cloneDay = day;
+      const dayEvents = events.filter(e => isSameDay(new Date(e.date), cloneDay));
+      const hasEkadasi = dayEvents.some(e => e.type === "ekadasi");
+      const hasFest = dayEvents.some(e => e.type === "festival");
+
+      let dayStyle = { ...styles.dayBox };
+      if (!isSameMonth(cloneDay, currentMonth)) dayStyle.color = "rgba(245,233,208,0.25)";
+      if (isSameDay(cloneDay, selectedDate)) dayStyle.backgroundColor = "rgba(201,146,42,0.2)";
+
+      days.push(
+        <div key={cloneDay} style={dayStyle} onClick={() => setSelectedDate(cloneDay)}>
+          <div>{format(cloneDay, "d")}</div>
+          <div style={{ display: "flex", gap: 3, marginTop: 4 }}>
+            {hasEkadasi && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#E8B84B" }} />}
+            {hasFest && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#dc5028" }} />}
+          </div>
+        </div>
+      );
       day = addDays(day, 1);
     }
-    return days;
-  }, [startDate, endDate]);
-
-  function nextMonth() {
-    setCurrentMonth(addMonths(currentMonth, 1));
+    rows.push(<div key={day} style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>{days}</div>);
+    days = [];
   }
-  function prevMonth() {
-    setCurrentMonth(subMonths(currentMonth, 1));
-  }
-    function goToday() {
-    const now = new Date();
-    if (now.getFullYear() === 2026) {
-      setCurrentMonth(now);
-      setSelectedDate(now);
-    } else {
-      setCurrentMonth(new Date("2026-01-01"));
-      setSelectedDate(new Date("2026-01-14"));
-    }
-  }
-  const selectedIso = format(selectedDate, "yyyy-MM-dd");
-  const dayEvents = eventsByDate[selectedIso] || [];
 
   return (
-    <>
-      <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
-      <div style={styles.page}>
-        <div style={styles.header}>
-          <div>
-            <h1 style={styles.title}>ISKCON Kolhapur</h1>
-            <div style={{ fontSize: 12, color: "rgba(201,146,42,0.6)", letterSpacing: 2 }}>CALENDAR — 2026 EVENTS</div>
+    <div style={styles.page}>
+      <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+      <div style={styles.container}>
+
+        {/* Left Side: Calendar Box */}
+        <div style={styles.calWrapper}>
+          <div style={styles.calHeader}>
+            <button style={styles.navBtn} onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>◀</button>
+            <h2 style={{ fontFamily: "'Cinzel', serif", color: "#E8B84B", margin: 0 }}>{format(currentMonth, "MMMM yyyy")}</h2>
+            <button style={styles.navBtn} onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>▶</button>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button style={styles.navBtn} onClick={goToday}>Today</button>
-            <button style={styles.navBtn} onClick={prevMonth}>Prev</button>
-            <button style={styles.navBtn} onClick={nextMonth}>Next</button>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", textAlign: "center", fontWeight: 600, fontSize: 12, color: "rgba(201,146,42,0.6)", paddingBottom: 8 }}>
+            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => <div key={d}>{d}</div>)}
           </div>
+          <div>{rows}</div>
         </div>
 
-        <div style={styles.container}>
-          <div style={styles.leftPanel}>
-            <div style={styles.calendarHeader}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <button style={styles.monthArrowBtn} onClick={prevMonth}>‹</button>
-                <div style={{ fontSize: 16, color: "#E8B84B", fontFamily: "'Cinzel', serif" }}>
-                  {format(currentMonth, "MMMM yyyy")}
+        {/* Right Side: Detailed Focus */}
+        <div style={styles.detailsPanel}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <h3 style={{ fontFamily: "'Cinzel', serif", color: "#E8B84B", margin: 0 }}>{format(selectedDate, "do MMMM yyyy")}</h3>
+            {isAdmin && (
+              <button style={styles.addEventBtn} onClick={handleAddEvent}>+ Add Event</button>
+            )}
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            {activeEvents.length === 0 ? (
+              <p style={{ color: "rgba(245,233,208,0.5)", fontSize: 13 }}>No major events listed for today.</p>
+            ) : (
+              activeEvents.map((e, idx) => (
+                <div key={idx} style={{ background: "rgba(255,255,255,0.02)", borderLeft: `3px solid ${e.type === "ekadasi" ? "#E8B84B" : "#dc5028"}`, padding: 10, borderRadius: 4, marginBottom: 8 }}>
+                  <div style={{ fontWeight: 600, color: "#f5e9d0" }}>{e.name}</div>
+                  <div style={{ fontSize: 12, color: "rgba(245,233,208,0.6)", marginTop: 2 }}>{e.desc}</div>
+                  {e.parana && <div style={{ fontSize: 11, color: "#E8B84B", marginTop: 4, fontWeight: "500" }}>⏰ Parana Break Fast: {e.parana}</div>}
                 </div>
-                <button style={styles.monthArrowBtn} onClick={nextMonth}>›</button>
+              ))
+            )}
           </div>
 
-          <div style={{ color: "rgba(245,233,208,0.5)", fontSize: 13 }}>
-            {format(selectedDate, "eeee, do MMMM")}
-          </div>
-        </div>
-
-            <div style={{ ...styles.grid, marginBottom: 8 }}>
-              {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
-                <div key={d} style={{ textAlign: "center", fontSize: 12, color: "rgba(245,233,208,0.5)" }}>{d}</div>
-              ))}
-            </div>
-
-            <div style={styles.grid}>
-              {monthDays.map((d, idx) => {
-                const iso = format(d, "yyyy-MM-dd");
-                const isCurrentMonth = isSameMonth(d, monthStart);
-                const isToday = isSameDay(d, new Date());
-                const evs = eventsByDate[iso] || [];
-                return (
-                  <div
-                    key={idx}
-                    style={{
-                      ...styles.dayCell,
-                      opacity: isCurrentMonth ? 1 : 0.38,
-                      border: isSameDay(d, selectedDate) ? "1px solid rgba(201,146,42,0.5)" : "none"
-                    }}
-                    onClick={() => setSelectedDate(d)}
-                  >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div style={{ fontSize: 13, fontWeight: isToday ? 700 : 500 }}>{format(d, "d")}</div>
-                      {evs.length > 0 && <div style={styles.badge}>{evs.length}</div>}
-                    </div>
-
-                    <div style={{ marginTop: 8 }}>
-                      {evs.slice(0,2).map((e,i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12 }}>
-                          <span style={{ ...styles.eventDot, background: e.type === "ekadasi" ? "#C9922A" : "#7B2D10" }} />
-                          <span style={{ fontSize: 12, color: "rgba(245,233,208,0.9)" }}>{e.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div style={styles.rightPanel}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <div style={{ fontSize: 15, color: "#E8B84B", fontFamily: "'Cinzel', serif" }}>Events — {format(selectedDate, "do MMMM yyyy")}</div>
-              <div style={{ fontSize: 12, color: "rgba(245,233,208,0.5)" }}>{dayEvents.length} event{dayEvents.length !== 1 ? "s" : ""}</div>
-            </div>
-
-            <div style={{ marginBottom: 12 }}>
-              {dayEvents.length === 0 && <div style={{ color: "rgba(245,233,208,0.45)" }}>No events for this day.</div>}
-              {dayEvents.map((ev, i) => (
-                <div key={i} style={{ padding: "8px", borderRadius: 8, marginBottom: 8, background: "rgba(0,0,0,0.06)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ fontWeight: 600 }}>{ev.name}</div>
-                    <div style={{ fontSize: 12, color: "rgba(245,233,208,0.6)" }}>{ev.parana || ev.type}</div>
-                  </div>
-                  <div style={{ fontSize: 13, color: "rgba(245,233,208,0.8)", marginTop: 6 }}>{ev.desc}</div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ borderTop: "1px solid rgba(201,146,42,0.08)", paddingTop: 10 }}>
-              <input placeholder="Search users by name or email..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} style={styles.search} />
-              <div style={styles.usersWrap}>
-                {filteredUsers.map(u => (
-                  <div key={u.id} style={styles.userRow}>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{u.name}</div>
-                      <div style={{ fontSize: 12, color: "rgba(245,233,208,0.6)" }}>{u.email}</div>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 12, color: "rgba(245,233,208,0.6)" }}>{u.phone}</div>
-                      <div style={{ marginTop: 6 }}>
-                        <button style={{ ...styles.navBtn, padding: "4px 8px", fontSize: 12, marginRight: 6 }}>Edit</button>
-                        <button style={{ ...styles.navBtn, padding: "4px 8px", fontSize: 12, borderColor: "rgba(220,80,80,0.4)", color: "rgba(220,80,80,0.9)" }}>Delete</button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {filteredUsers.length === 0 && <div style={{ color: "rgba(245,233,208,0.35)", padding: 8 }}>No users found.</div>}
+          {/* User Directory Sub-section: Restricted to Admin Access Only */}
+          {isAdmin && (
+            <div style={{ borderTop: "1px solid rgba(201,146,42,0.12)", paddingTop: 14 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <span style={{ fontFamily: "'Cinzel', serif", fontSize: "12px", color: "#E8B84B", letterSpacing: "0.5px" }}>Logged In Users</span>
+                <span style={{ fontSize: "11px", color: "rgba(245,233,208,0.4)" }}>Total: {filteredUsers.length}</span>
               </div>
+
+              <input placeholder="Search active profiles..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} style={styles.search} />
+
+              <div style={styles.usersWrap}>
+                {isLoadingUsers ? (
+                  <div style={{ fontSize: 12, color: "rgba(245,233,208,0.4)", textAlign: "center", padding: "15px 0" }}>Syncing live database updates...</div>
+                ) : displayedUsers.length === 0 ? (
+                  <div style={{ fontSize: 12, color: "rgba(245,233,208,0.4)", textAlign: "center", padding: "10px 0" }}>No matching profiles found</div>
+                ) : (
+                  displayedUsers.map(u => (
+                    <div key={u._id} style={styles.userRow}> {/* Changed from u.id to u._id */}
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: "#f5e9d0" }}>{u.name || "Unknown User"}</div>
+                        <div style={{ fontSize: 11, color: "rgba(245,233,208,0.5)", marginTop: 1 }}>{u.email}</div>
+                      </div>
+                      {u.phone && <div style={{ fontSize: 11, color: "rgba(201,146,42,0.6)" }}>{u.phone}</div>}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Show toggle button only if total matches exceed the standard 5 rows limit */}
+              {!isLoadingUsers && filteredUsers.length > 5 && (
+                <button style={styles.seeMoreBtn} onClick={() => setShowAllUsers(!showAllUsers)}>
+                  {showAllUsers ? "▲ See Less" : `▼ See More (${filteredUsers.length - 5} hidden)`}
+                </button>
+              )}
             </div>
-          </div>
+          )}
+
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
+const styles = {
+  page: { background: "#15060a", minHeight: "100vh", padding: 20, color: "#f5e9d0", fontFamily: "'Inter', sans-serif" },
+  container: { maxWidth: "1000px", margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 340px", gap: 20, flexWrap: "wrap" },
+  calWrapper: { background: "#1e0c10", border: "1px solid rgba(201,146,42,0.15)", borderRadius: 12, padding: 16 },
+  calHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
+  navBtn: { background: "transparent", border: "1px solid rgba(201,146,42,0.3)", color: "#E8B84B", borderRadius: 6, padding: "4px 10px", cursor: "pointer" },
+  addEventBtn: { background: "linear-gradient(135deg, #c9922a, #a47219)", border: "none", color: "#1a0b0f", padding: "6px 12px", borderRadius: "6px", fontWeight: "600", fontSize: "12px", cursor: "pointer" },
+  dayBox: { height: 60, border: "1px solid rgba(201,146,42,0.04)", padding: 6, cursor: "pointer", display: "flex", flexDirection: "column", justifyContent: "space-between", fontSize: 13 },
+  detailsPanel: { background: "#220c11", border: "1px solid rgba(201,146,42,0.15)", borderRadius: 12, padding: 16, display: "flex", flexDirection: "column" },
+  search: { width: "100%", background: "rgba(255,255,255,0.03)", border: "0.5px solid rgba(201,146,42,0.25)", borderRadius: 6, padding: "8px 10px", fontSize: 12, color: "#f5e9d0", outline: "none", marginBottom: 10, boxSizing: "border-box" },
+  usersWrap: { display: "flex", flexDirection: "column", gap: 6, maxHeight: "280px", overflowY: "auto" },
+  userRow: { padding: "8px 12px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(201,146,42,0.05)", borderRadius: 6, display: "flex", justifyContent: "space-between", alignItems: "center" },
+  seeMoreBtn: { background: "transparent", border: "none", color: "#E8B84B", fontSize: "12px", fontWeight: "500", marginTop: "10px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", padding: "4px 0", width: "fit-content", outline: "none" }
+};
