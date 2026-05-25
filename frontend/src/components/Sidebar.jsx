@@ -59,7 +59,18 @@ export default function Sidebar() {
 }
 
 const styles = {
-  wrap: { width: "200px", minHeight: "100vh", alignSelf: "stretch", background: "#1a0b0f", borderRight: "1px solid rgba(201,146,42,0.15)", padding: "1.5rem 1rem", display: "flex", flexDirection: "column" },
+  wrap: {
+  width: "200px",
+  height: "100vh",           // was minHeight: "100vh"
+  position: "sticky",        // ADD
+  top: 0,                    // ADD
+  alignSelf: "stretch",
+  background: "#1a0b0f",
+  borderRight: "1px solid rgba(201,146,42,0.15)",
+  padding: "1.5rem 1rem",
+  display: "flex",
+  flexDirection: "column"
+},
   brand: { display: "flex", alignItems: "center", gap: "10px", marginBottom: "1.5rem" },
   brandIcon: { width: "36px", height: "36px", borderRadius: "50%", background: "rgba(201,146,42,0.15)", color: "#E8B84B", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontFamily: "'Cinzel', serif" },
   brandTitle: { fontFamily: "'Cinzel', serif", fontSize: "13px", color: "#E8B84B", letterSpacing: "1px" },
